@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    name: etcd
+  name: etcd
+spec:
+  template:
+    metadata:
+      labels:
+        app: etcd
+    spec:
+      containers:
+        - name: etcd
+          image: mmitti/etcd
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 2379
+              hostPort: 2379
+              name: p1
+            - containerPort: 2380
+              hostPort: 2380
+              name: p2
+          env:
+          - name: DISCOVERY
+            value: http://192.168.137.20:2379/v2/keys/discovery/test
+          - name: DATADIR
+            value: /data
+          volumeMounts:
+          - name: etcd-data
+            mountPath: /data
+      volumes:
+        - name: etcd-data
+          hostPath:
+            path: /data/etcd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd
+  labels:
+    app: etcd
+spec:
+  ports:
+  - port: 2379
+    name: p1
+  - port: 2380
+    name: p2
+  clusterIP: None
+  selector:
+    app: etcd
